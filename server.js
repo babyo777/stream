@@ -39,6 +39,7 @@ if (cluster.isPrimary) {
             "content-range": `bytes ${start}-${end}/${fileSize}`,
             "accept-ranges": "bytes",
             "content-length": contentLength,
+            "content-type": "audio/mpeg",
           };
           res.writeHead(206, header);
           audio.pipe(res);
@@ -70,6 +71,7 @@ if (cluster.isPrimary) {
             "content-range": `bytes ${start}-${end}/${fileSize}`,
             "accept-ranges": "bytes",
             "content-length": contentLength,
+            "content-type": "audio/mpeg",
           };
           res.writeHead(206, header);
           audio.pipe(res);
