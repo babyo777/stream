@@ -40,8 +40,8 @@ if (cluster.isPrimary) {
             "accept-ranges": "bytes",
             "content-length": contentLength,
           };
-          audio.pipe(res);
           res.writeHead(206, header);
+          audio.pipe(res);
           return;
         }
 
@@ -71,8 +71,8 @@ if (cluster.isPrimary) {
             "accept-ranges": "bytes",
             "content-length": contentLength,
           };
-          audio.pipe(res);
           res.writeHead(206, header);
+          audio.pipe(res);
         });
       } else {
         res.status(200).json("url not provided");
