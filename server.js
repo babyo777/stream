@@ -20,13 +20,28 @@ if (cluster.isPrimary) {
       const Link = req.query.url;
       if (Link) {
         if (fs.existsSync(`music/${Link}.mp3`)) {
-          const audio = fs.createReadStream(`music/${Link}.mp3`);
+          const range = req.headers.range;
+          if (!range) {
+            res.status(404).json("error");
+            return;
+          }
           const data = fs.statSync(`music/${Link}.mp3`);
-          res.setHeader("content-type", "audio/mpeg");
-          res.setHeader("Accept-Ranges", "bytes");
-          res.setHeader("content-length", data.size);
-
+          const fileSize = data.size;
+          const chunk = 10 ** 6;
+          const start = Number(range.replace(/\D/g, ""));
+          const end = Math.min(start + chunk, fileSize);
+          const audio = fs.createReadStream(`music/${Link}.mp3`, {
+            start,
+            end,
+          });
+          const contentLength = end - start + 1;
+          const header = {
+            "content-range": `bytes ${start}-${end}/${fileSize}`,
+            "accept-ranges": "bytes",
+            "content-length": contentLength,
+          };
           audio.pipe(res);
+          res.writeHead(206, header);
           return;
         }
 
@@ -37,15 +52,27 @@ if (cluster.isPrimary) {
 
         Download.on("error", () => console.error("error"));
         Download.on("finish", () => {
-          console.log(Link);
-
-          const audio = fs.createReadStream(`music/${Link}.mp3`);
+          const range = req.headers.range;
+          if (!range) {
+            res.status(404).json("error");
+          }
           const data = fs.statSync(`music/${Link}.mp3`);
-          res.setHeader("content-type", "audio/mpeg");
-          res.setHeader("Accept-Ranges", "bytes");
-          res.setHeader("content-length", data.size);
-
+          const fileSize = data.size;
+          const chunk = 10 ** 6;
+          const start = Number(range.replace(/\D/g, ""));
+          const end = Math.min(start + chunk, fileSize);
+          const audio = fs.createReadStream(`music/${Link}.mp3`, {
+            start,
+            end,
+          });
+          const contentLength = end - start + 1;
+          const header = {
+            "content-range": `bytes ${start}-${end}/${fileSize}`,
+            "accept-ranges": "bytes",
+            "content-length": contentLength,
+          };
           audio.pipe(res);
+          res.writeHead(206, header);
         });
       } else {
         res.status(200).json("url not provided");
@@ -62,27 +89,17 @@ if (cluster.isPrimary) {
     if (Link) {
       try {
         if (fs.existsSync(`music/${Link}.mp3`)) {
-          const range = req.headers.range;
-          if (!range) {
-            res.status(404).json("error");
-          }
+          const audio = fs.createReadStream(`music/${Link}.mp3`);
           const data = fs.statSync(`music/${Link}.mp3`);
-          const fileSize = data.size;
-          const chunk = 10 ** 6;
-          const start = Number(range.replace(/\D/g, ""));
-          const end = Math.min(start + chunk, fileSize);
-          const audio = fs.createReadStream(`music/${Link}.mp3`, {
-            start,
-            end,
-          });
-          const contentLength = end - start + 1;
-          const header = {
-            "content-range": `bytes ${start}-${end}/${fileSize}`,
-            "accept-ranges": "bytes",
-            "content-length": contentLength,
-          };
+          res.setHeader("content-type", "audio/mpeg");
+          res.setHeader("Accept-Ranges", "bytes");
+          res.setHeader("content-length", data.size);
+
+          res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="${File}.mp3"`
+          );
           audio.pipe(res);
-          res.writeHead(206, header);
           return;
         }
 
@@ -93,27 +110,18 @@ if (cluster.isPrimary) {
 
         Download.on("error", () => console.error("error"));
         Download.on("finish", () => {
-          const range = req.headers.range;
-          if (!range) {
-            res.status(404).json("error");
-          }
+          console.log(Link);
+
+          const audio = fs.createReadStream(`music/${Link}.mp3`);
           const data = fs.statSync(`music/${Link}.mp3`);
-          const fileSize = data.size;
-          const chunk = 10 ** 6;
-          const start = Number(range.replace(/\D/g, ""));
-          const end = Math.min(start + chunk, fileSize);
-          const audio = fs.createReadStream(`music/${Link}.mp3`, {
-            start,
-            end,
-          });
-          const contentLength = end - start + 1;
-          const header = {
-            "content-range": `bytes ${start}-${end}/${fileSize}`,
-            "accept-ranges": "bytes",
-            "content-length": contentLength,
-          };
+          res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="${File}.mp3"`
+          );
+          res.setHeader("content-type", "audio/mpeg");
+          res.setHeader("Accept-Ranges", "bytes");
+          res.setHeader("content-length", data.size);
           audio.pipe(res);
-          res.writeHead(206, header);
         });
       } catch (error) {
         console.log(error.message);
