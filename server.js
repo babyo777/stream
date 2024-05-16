@@ -8,7 +8,7 @@ const cluster = require("node:cluster");
 const os = require("os");
 const totalCpu = os.cpus().length;
 
-if (cluster.isMaster) {
+if (cluster.isPrimary) {
   for (let i = 0; i < totalCpu; i++) {
     cluster.fork();
   }
@@ -20,28 +20,12 @@ if (cluster.isMaster) {
       const Link = req.query.url;
       if (Link) {
         if (fs.existsSync(`music/${Link}.mp3`)) {
-          const range = req.headers.range;
-          if (!range) {
-            res.status(404).json("error");
-            return;
-          }
+          const audio = fs.createReadStream(`music/${Link}.mp3`);
           const data = fs.statSync(`music/${Link}.mp3`);
-          const fileSize = data.size;
-          const chunk = 10 ** 6;
-          const start = Number(range.replace(/\D/g, ""));
-          const end = Math.min(start + chunk, fileSize);
-          const audio = fs.createReadStream(`music/${Link}.mp3`, {
-            start,
-            end,
-          });
-          const contentLength = end - start + 1;
-          const header = {
-            "content-range": `bytes ${start}-${end}/${fileSize}`,
-            "accept-ranges": "bytes",
-            "content-length": contentLength,
-            "content-type": "audio/mpeg",
-          };
-          res.writeHead(206, header);
+          res.setHeader("content-type", "audio/mpeg");
+          res.setHeader("Accept-Ranges", "bytes");
+          res.setHeader("content-length", data.size);
+
           audio.pipe(res);
           return;
         }
@@ -53,27 +37,14 @@ if (cluster.isMaster) {
 
         Download.on("error", () => console.error("error"));
         Download.on("finish", () => {
-          const range = req.headers.range;
-          if (!range) {
-            res.status(404).json("error");
-          }
+          console.log(Link);
+
+          const audio = fs.createReadStream(`music/${Link}.mp3`);
           const data = fs.statSync(`music/${Link}.mp3`);
-          const fileSize = data.size;
-          const chunk = 10 ** 6;
-          const start = Number(range.replace(/\D/g, ""));
-          const end = Math.min(start + chunk, fileSize);
-          const audio = fs.createReadStream(`music/${Link}.mp3`, {
-            start,
-            end,
-          });
-          const contentLength = end - start + 1;
-          const header = {
-            "content-range": `bytes ${start}-${end}/${fileSize}`,
-            "accept-ranges": "bytes",
-            "content-length": contentLength,
-            "content-type": "audio/mpeg",
-          };
-          res.writeHead(206, header);
+          res.setHeader("content-type", "audio/mpeg");
+          res.setHeader("Accept-Ranges", "bytes");
+          res.setHeader("content-length", data.size);
+
           audio.pipe(res);
         });
       } else {
