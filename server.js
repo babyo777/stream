@@ -18,7 +18,7 @@ if (cluster.isPrimary) {
   app.get("/", async (req, res) => {
     try {
       const Link = req.query.url;
-      if (Link && StreamAudio.validateID(Link)) {
+      if (Link) {
         if (fs.existsSync(`music/${Link}.mp3`)) {
           const data = fs.statSync(`music/${Link}.mp3`);
           const range = req.headers.range;
@@ -90,7 +90,7 @@ if (cluster.isPrimary) {
     const Link = req.query.url;
     const File = req.query.file;
 
-    if (Link && StreamAudio.validateID(Link)) {
+    if (Link) {
       try {
         if (fs.existsSync(`music/${Link}.mp3`)) {
           const audio = fs.createReadStream(`music/${Link}.mp3`);
