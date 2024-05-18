@@ -19,6 +19,11 @@ if (cluster.isPrimary) {
     try {
       const Link = req.query.url;
       if (Link) {
+        const info = await StreamAudio.getInfo(Link);
+        StreamAudio.chooseFormat(info.formats, {
+          filter: "videoandaudio",
+          quality: "highestvideo",
+        });
         if (fs.existsSync(`music/${Link}.mp3`)) {
           const data = fs.statSync(`music/${Link}.mp3`);
           const range = req.headers.range;
@@ -87,7 +92,7 @@ if (cluster.isPrimary) {
       }
     } catch (error) {
       console.log(error.message);
-      res.json("error");
+      res.json({ error: error.message });
     }
   });
   app.get("/download/", async (req, res) => {
@@ -96,6 +101,11 @@ if (cluster.isPrimary) {
 
     if (Link) {
       try {
+        const info = await StreamAudio.getInfo(Link);
+        StreamAudio.chooseFormat(info.formats, {
+          filter: "videoandaudio",
+          quality: "highestvideo",
+        });
         if (fs.existsSync(`music/${Link}.mp3`)) {
           const audio = fs.createReadStream(`music/${Link}.mp3`);
           const data = fs.statSync(`music/${Link}.mp3`);
