@@ -43,6 +43,8 @@ if (cluster.isPrimary) {
             });
 
             return;
+          } else {
+            res.status(403).send();
           }
         }
 
@@ -76,6 +78,8 @@ if (cluster.isPrimary) {
             });
 
             return;
+          } else {
+            res.status(403).send();
           }
         });
       } else {
