@@ -25,32 +25,14 @@ if (cluster.isPrimary) {
           quality: "highestvideo",
         });
         if (fs.existsSync(`music/${Link}.mp3`)) {
+          const audio = fs.createReadStream(`music/${Link}.mp3`);
           const data = fs.statSync(`music/${Link}.mp3`);
-          const range = req.headers.range;
-          const totalSize = data.size;
+          res.setHeader("content-type", "audio/mpeg");
+          res.setHeader("Accept-Ranges", "bytes");
+          res.setHeader("content-length", data.size);
 
-          if (range) {
-            const parts = range.replace(/bytes=/, "").split("-");
-            const start = parseInt(parts[0], 10);
-            const end = parts[1] ? parseInt(parts[1], 10) : totalSize - 1;
-
-            const chunkSize = end - start + 1;
-            const audio = fs.createReadStream(`music/${Link}.mp3`, {
-              start,
-              end,
-            });
-            audio.pipe(res);
-            res.writeHead(206, {
-              "Content-Range": `bytes ${start}-${end}/${totalSize}`,
-              "Content-Length": chunkSize,
-              "Content-Type": "audio/mpeg",
-              "Accept-Ranges": "bytes",
-            });
-
-            return;
-          } else {
-            res.status(403).send();
-          }
+          audio.pipe(res);
+          return;
         }
 
         const Download = StreamAudio(Link, {
@@ -60,32 +42,14 @@ if (cluster.isPrimary) {
 
         Download.on("error", () => console.error("error"));
         Download.on("finish", () => {
+          const audio = fs.createReadStream(`music/${Link}.mp3`);
           const data = fs.statSync(`music/${Link}.mp3`);
-          const range = req.headers.range;
-          const totalSize = data.size;
+          res.setHeader("content-type", "audio/mpeg");
+          res.setHeader("Accept-Ranges", "bytes");
+          res.setHeader("content-length", data.size);
 
-          if (range) {
-            const parts = range.replace(/bytes=/, "").split("-");
-            const start = parseInt(parts[0], 10);
-            const end = parts[1] ? parseInt(parts[1], 10) : totalSize - 1;
-
-            const chunkSize = end - start + 1;
-            const audio = fs.createReadStream(`music/${Link}.mp3`, {
-              start,
-              end,
-            });
-            audio.pipe(res);
-            res.writeHead(206, {
-              "Content-Range": `bytes ${start}-${end}/${totalSize}`,
-              "Content-Length": chunkSize,
-              "Content-Type": "audio/mpeg",
-              "Accept-Ranges": "bytes",
-            });
-
-            return;
-          } else {
-            res.status(403).send();
-          }
+          audio.pipe(res);
+          return;
         });
       } else {
         res.status(200).json("url not provided");
