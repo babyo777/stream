@@ -19,8 +19,9 @@ app.get("/", async (req, res) => {
       if (fs.existsSync(`music/${Link}.mp3`)) {
         const audio = fs.createReadStream(`music/${Link}.mp3`);
         const data = fs.statSync(`music/${Link}.mp3`);
-        res.setHeader("Content-Type", "audio/mpeg");
+        res.setHeader("content-type", "audio/mpeg");
         res.setHeader("Accept-Ranges", "bytes");
+        res.setHeader("content-length", data.size);
         res.setHeader("Content-Disposition", `inline; filename="audio.mp3"`);
 
         audio.pipe(res);
@@ -36,8 +37,9 @@ app.get("/", async (req, res) => {
       Download.on("finish", () => {
         const audio = fs.createReadStream(`music/${Link}.mp3`);
         const data = fs.statSync(`music/${Link}.mp3`);
-        res.setHeader("Content-Type", "audio/mpeg");
+        res.setHeader("content-type", "audio/mpeg");
         res.setHeader("Accept-Ranges", "bytes");
+        res.setHeader("content-length", data.size);
         res.setHeader("Content-Disposition", `inline; filename="audio.mp3"`);
 
         audio.pipe(res);
