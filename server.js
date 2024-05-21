@@ -5,7 +5,14 @@ const port = process.env.PORT || 4000;
 const cors = require("cors");
 const fs = require("fs");
 
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "https://napster-drx.vercel.app",
+      "https://napster-drx.vercel.app/",
+    ],
+  })
+);
 app.use(express.static("./"));
 app.get("/", async (req, res) => {
   try {
