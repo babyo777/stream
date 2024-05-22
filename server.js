@@ -21,7 +21,7 @@ app.get("/", async (req, res) => {
       const info = await StreamAudio.getInfo(Link);
       StreamAudio.chooseFormat(info.formats, {
         filter: "videoandaudio",
-        quality: "lowestvideo",
+        quality: "highestvideo",
       });
       if (fs.existsSync(`music/${Link}.mp3`)) {
         const audio = fs.createReadStream(`music/${Link}.mp3`);
@@ -37,7 +37,7 @@ app.get("/", async (req, res) => {
 
       const Download = StreamAudio(Link, {
         filter: "videoandaudio",
-        quality: "lowestvideo",
+        quality: "highestvideo",
       }).pipe(fs.createWriteStream(`music/${Link}.mp3`));
 
       Download.on("error", () => console.error("error"));
@@ -69,7 +69,7 @@ app.get("/download/", async (req, res) => {
       const info = await StreamAudio.getInfo(Link);
       StreamAudio.chooseFormat(info.formats, {
         filter: "videoandaudio",
-        quality: "lowestvideo",
+        quality: "highestvideo",
       });
       if (fs.existsSync(`music/${Link}.mp3`)) {
         const audio = fs.createReadStream(`music/${Link}.mp3`);
@@ -88,7 +88,7 @@ app.get("/download/", async (req, res) => {
 
       const Download = StreamAudio(Link, {
         filter: "videoandaudio",
-        quality: "lowestvideo",
+        quality: "highestvideo",
       }).pipe(fs.createWriteStream(`music/${Link}.mp3`));
 
       Download.on("error", () => console.error("error"));
