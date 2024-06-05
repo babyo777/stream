@@ -1,7 +1,7 @@
 const express = require("express");
 const StreamAudio = require("ytdl-core");
 const app = express();
-const port = process.env.PORT || 4000;
+const port = 4000;
 const cors = require("cors");
 const fs = require("fs");
 
@@ -107,7 +107,7 @@ app.get("/download/", async (req, res) => {
         audio.pipe(res);
       });
     } catch (error) {
-      console.log(error.message);
+      console.log(error);
       res.json("error");
     }
   } else {
