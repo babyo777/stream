@@ -2,18 +2,8 @@ const express = require("express");
 const StreamAudio = require("ytdl-core");
 const app = express();
 const port = process.env.PORT || 4000;
-const cors = require("cors");
 const fs = require("fs");
 
-app.use(
-  cors({
-    origin: [
-      "https://napster-drx.vercel.app",
-      "https://napster-drx.vercel.app/",
-    ],
-  })
-);
-app.use(express.static("./"));
 app.get("/", async (req, res) => {
   try {
     const Link = req.query.url;
@@ -21,7 +11,7 @@ app.get("/", async (req, res) => {
       const info = await StreamAudio.getInfo(Link);
       StreamAudio.chooseFormat(info.formats, {
         filter: "videoandaudio",
-        quality: "highestvideo",
+        quality: "lowestvideo",
       });
       if (fs.existsSync(`music/${Link}.mp3`)) {
         const audio = fs.createReadStream(`music/${Link}.mp3`);
@@ -37,7 +27,7 @@ app.get("/", async (req, res) => {
 
       const Download = StreamAudio(Link, {
         filter: "videoandaudio",
-        quality: "highestvideo",
+        quality: "lowestvideo",
       }).pipe(fs.createWriteStream(`music/${Link}.mp3`));
 
       Download.on("error", () => console.error("error"));
@@ -69,7 +59,7 @@ app.get("/download/", async (req, res) => {
       const info = await StreamAudio.getInfo(Link);
       StreamAudio.chooseFormat(info.formats, {
         filter: "videoandaudio",
-        quality: "highestvideo",
+        quality: "lowestvideo",
       });
       if (fs.existsSync(`music/${Link}.mp3`)) {
         const audio = fs.createReadStream(`music/${Link}.mp3`);
@@ -88,7 +78,7 @@ app.get("/download/", async (req, res) => {
 
       const Download = StreamAudio(Link, {
         filter: "videoandaudio",
-        quality: "highestvideo",
+        quality: "lowestvideo",
       }).pipe(fs.createWriteStream(`music/${Link}.mp3`));
 
       Download.on("error", () => console.error("error"));
