@@ -99,7 +99,7 @@ app.get("/download/", async (req, res) => {
       });
     } catch (error) {
       console.log(error);
-      res.json("error");
+      res.status(500).json("error");
     }
   } else {
     res.status(200).json("url not provided");
