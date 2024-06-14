@@ -3,7 +3,8 @@ const StreamAudio = require("ytdl-core");
 const app = express();
 const port = process.env.PORT || 4000;
 const fs = require("fs");
-
+const cors = require("cors");
+app.use(cors());
 app.get("/", async (req, res) => {
   try {
     const Link = req.query.url;
