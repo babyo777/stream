@@ -7,7 +7,7 @@ WORKDIR /app
 COPY . .
 
 # Install dependencies
-RUN npm install --productio
+RUN npm install
 
 # Expose the port your app runs on
 EXPOSE 3000
