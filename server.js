@@ -1,110 +1,53 @@
-const express = require("express");
-const StreamAudio = require("ytdl-core");
+import express from "express";
+import { Innertube, UniversalCache, Utils } from "youtubei.js";
+
 const app = express();
-const port = process.env.PORT || 4000;
-const fs = require("fs");
-const cors = require("cors");
-app.use(cors());
-app.get("/", async (req, res) => {
-  try {
-    const Link = req.query.url;
-    if (Link) {
-      const info = await StreamAudio.getInfo(Link);
-      StreamAudio.chooseFormat(info.formats, {
-        filter: "videoandaudio",
-        quality: "lowestvideo",
-      });
-      if (fs.existsSync(`music/${Link}.mp3`)) {
-        const audio = fs.createReadStream(`music/${Link}.mp3`);
-        const data = fs.statSync(`music/${Link}.mp3`);
-        res.setHeader("content-type", "audio/mpeg");
-        res.setHeader("Accept-Ranges", "bytes");
-        res.setHeader("content-length", data.size);
-        res.setHeader("Content-Disposition", `inline; filename="audio.mp3"`);
+const PORT = process.env.PORT || 3000;
 
-        audio.pipe(res);
-        return;
-      }
+(async () => {
+  const yt = await Innertube.create({
+    cache: new UniversalCache(false),
+    generate_session_locally: true,
+  });
 
-      const Download = StreamAudio(Link, {
-        filter: "videoandaudio",
-        quality: "lowestvideo",
-      }).pipe(fs.createWriteStream(`music/${Link}.mp3`));
+  // Route to stream the song based on its ID
+  app.get("/stream/:songId", async (req, res) => {
+    const songId = req.params.songId;
 
-      Download.on("error", () => console.error("error"));
-      Download.on("finish", () => {
-        const audio = fs.createReadStream(`music/${Link}.mp3`);
-        const data = fs.statSync(`music/${Link}.mp3`);
-        res.setHeader("content-type", "audio/mpeg");
-        res.setHeader("Accept-Ranges", "bytes");
-        res.setHeader("content-length", data.size);
-        res.setHeader("Content-Disposition", `inline; filename="audio.mp3"`);
-
-        audio.pipe(res);
-        return;
-      });
-    } else {
-      res.status(200).json("url not provided");
-    }
-  } catch (error) {
-    console.log(error.message);
-    res.json({ error: error.message });
-  }
-});
-app.get("/download/", async (req, res) => {
-  const Link = req.query.url;
-  const File = req.query.file;
-
-  if (Link) {
     try {
-      const info = await StreamAudio.getInfo(Link);
-      StreamAudio.chooseFormat(info.formats, {
-        filter: "videoandaudio",
-        quality: "lowestvideo",
+      // Get the audio stream from YouTube Music
+      const stream = await yt.download(songId, {
+        type: "audio",
+        quality: "best",
+        format: "mp4",
+        client: "YTMUSIC",
       });
-      if (fs.existsSync(`music/${Link}.mp3`)) {
-        const audio = fs.createReadStream(`music/${Link}.mp3`);
-        const data = fs.statSync(`music/${Link}.mp3`);
-        res.setHeader("content-type", "audio/mpeg");
-        res.setHeader("Accept-Ranges", "bytes");
-        res.setHeader("content-length", data.size);
 
-        res.setHeader(
-          "Content-Disposition",
-          `attachment; filename="${File}.mp3"`
-        );
-        audio.pipe(res);
-        return;
+      // Set headers for real-time streaming
+      res.setHeader("Content-Type", "audio/m4a");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Content-Disposition", 'inline; filename="stream.m4a"');
+      res.setHeader("Accept-Ranges", "bytes");
+      res.setHeader("Transfer-Encoding", "chunked");
+      res.status(200);
+
+      console.info(`Streaming song with ID: ${songId}`);
+
+      // Write chunks of the audio stream to the response
+      for await (const chunk of Utils.streamToIterable(stream)) {
+        res.write(chunk);
       }
 
-      const Download = StreamAudio(Link, {
-        filter: "videoandaudio",
-        quality: "lowestvideo",
-      }).pipe(fs.createWriteStream(`music/${Link}.mp3`));
-
-      Download.on("error", () => console.error("error"));
-      Download.on("finish", () => {
-        console.log(Link);
-
-        const audio = fs.createReadStream(`music/${Link}.mp3`);
-        const data = fs.statSync(`music/${Link}.mp3`);
-        res.setHeader(
-          "Content-Disposition",
-          `attachment; filename="${File}.mp3"`
-        );
-        res.setHeader("content-type", "audio/mpeg");
-        res.setHeader("Accept-Ranges", "bytes");
-        res.setHeader("content-length", data.size);
-        audio.pipe(res);
-      });
+      res.end(); // End the response after streaming
+      console.info(`Finished streaming song: ${songId}`);
     } catch (error) {
-      console.log(error);
-      res.status(500).json(error.message);
+      console.error(`Error streaming song: ${songId}`, error);
+      res.status(500).send("Error streaming the song.");
     }
-  } else {
-    res.status(200).json("url not provided");
-  }
-});
-app.listen(port, () => {
-  console.log(`http://localhost:${port}`);
-});
+  });
+
+  // Start the Express server
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+  });
+})();
